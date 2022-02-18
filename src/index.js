@@ -1,38 +1,55 @@
 const state = {
   breweries: [],
+  searchedBreweries: [],
 }
 
 const breweryResult = document.querySelector("#breweries-list")
 const search = document.querySelector("#select-state-form")
+const searchBarHidden = document.querySelector(".search-bar")
+const searchEl = document.querySelector("#select-state")
+const dropDown = document.querySelector("#filter-by-type")
+const searchByBreweryName = document.querySelector("#search-breweries")
+// const main = document.querySelector("mainEl")
+// main.hidden = true
+searchBarHidden.hidden = true
 
-function getBreweries() {
-  const searchEl = document.querySelector("#select-state")
+function fetchBreweries() {
+  let url = `https://api.openbrewerydb.org/breweries?by_state=${searchEl.value}&per_page=50`
+  if (dropDown.value) {
+    url += `&per_page=50&by_type=${dropDown.value}`
+  }
+  fetch(url)
+    .then((response) => response.json())
+    .then(function (breweries) {
+      state.breweries = breweries
+      console.log("BREWERIES", state.breweries)
+      renderBreweries(breweries)
+    })
+}
+
+function getBreweriesByState() {
   search.addEventListener("submit", function (event) {
     event.preventDefault()
-
-    fetch(
-      `https://api.openbrewerydb.org/breweries?by_state=${searchEl.value}&per_page=50`
-    )
-      .then((response) => response.json())
-      .then(function (breweries) {
-        state.breweries = breweries
-        console.log("BREWERIES", state.breweries)
-        renderBreweries(breweries)
-      })
+    searchBarHidden.hidden = false
+    fetchBreweries()
   })
+}
 
-  const dropDown = document.querySelector("#filter-by-type")
+function filterBreweriesByType() {
   dropDown.addEventListener("change", function (event) {
     if (searchEl.value === "") return
-    fetch(
-      `https://api.openbrewerydb.org/breweries?by_state=${searchEl.value}&per_page=50&by_type=${dropDown.value}`
+    fetchBreweries()
+  })
+}
+
+function searchByName() {
+  searchByBreweryName.addEventListener("input", function (event) {
+    // event.preventDefault()
+    state.breweries = state.breweries.filter((brewery) =>
+      brewery.name.includes(searchByBreweryName.value)
     )
-      .then((response) => response.json())
-      .then(function (breweries) {
-        state.breweries = breweries
-        console.log("BREWERIES", state.breweries)
-        renderBreweries(breweries)
-      })
+    console.log(state.breweries)
+    renderBreweries(state.breweries)
   })
 }
 
@@ -64,4 +81,6 @@ function renderBreweries() {
   }
 }
 
-getBreweries()
+getBreweriesByState()
+searchByName()
+filterBreweriesByType()
